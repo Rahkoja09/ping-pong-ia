@@ -2,24 +2,41 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pong IA vs Humain</title>
     <link rel="stylesheet" href="style.css">
+    <script src="../script/script.js" defer></script>
+    <title>King Pong</title>
 </head>
 <body>
-    <div id="controls">
-        <label for="level">Choisissez le niveau de difficulté:</label>
-        <select id="level">
-            <option value="1">Facile</option>
-            <option value="2">Moyen</option>
-            <option value="3">Difficile</option>
-        </select>
+    <div class="header">
+        <h1>King Pong</h1>
+        <img src="../images/pingpong.png" alt="logo" width="60px">
     </div>
-    <div id="game">
-        <div id="player" class="paddle"></div>
-        <div id="ai" class="paddle"></div>
-        <div id="ball"></div>
+
+    <div class="pong-wrapper">
+        <canvas id="ping-pong" width="600px" height="400px"></canvas>
     </div>
-    <script src="../script/script.js"></script>
+
+    <div class="floating-buttons">
+        <button class="start-btn">Démarrer</button>
+        <button class="pause-btn">Pause</button>
+        <button class="restart-btn">Redémarrer</button>
+    </div>
+
+    
+    <!-- Image de pouvoir de rapidité -->
+<img id="power-up-image" src="../images/speed.png" alt="Pouvoir de rapidité" width="50px" style="position: absolute; top: 10px; left: 10px; opacity: 1; transition: opacity 0.5s;">
+<!-- Image de pouvoir d'élargissement -->
+<img id="widen-power-up-image" src="../images/widen.png" alt="Pouvoir d'élargissement" width="40px" style="position: absolute; top: 10px; left: 70px; opacity: 1; transition: opacity 0.5s;">
+<div id="countdown2" style="position: absolute; top: 70px; left: 80px; font-size: 20px; color: white;">15</div>
+<!-- Compte à rebours -->
+<div id="countdown" style="position: absolute; top: 70px; left: 10px; font-size: 20px; color: white;">15</div>
+<!-- Instructions pour les pouvoirs -->
+<div class="instructions" style="position: absolute; top: 150px; left: 10px; font-size: 16px; color: white;">
+    <p><strong>Instructions:</strong></p>
+    <p>Rapidité : appuyez sur <strong>A</strong> </p>
+    <p>Elargissement de raquette : appuyez sur <strong>Z</strong></p>
+</div>
 </body>
 </html>
