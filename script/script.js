@@ -1,18 +1,40 @@
 const canvas = document.querySelector("#ping-pong");
 const context = canvas.getContext("2d");
-
 const startBtn = document.querySelector(".start-btn");
 const pauseBtn = document.querySelector(".pause-btn");
 const restartBtn = document.querySelector(".restart-btn");
+const startiavsia = document.querySelector(".iavsia");
 
 let gameRunning = false;
 let animationId;
+let particles = [];
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.velocityX = (Math.random() - 0.5) * 2;
+        this.velocityY = (Math.random() - 0.5) * 2;
+        this.lifetime = 50;
+        this.color = color;
+    }
+
+    draw(context) {
+        if (this.lifetime > 0) {
+            context.fillStyle = this.color;
+            context.fillRect(this.x, this.y, 2, 2);
+            this.x += this.velocityX;
+            this.y += this.velocityY;
+            this.lifetime--;
+        }
+    }
+}
 
 const user = {
-    x: 0,
+    x: 20,
     y: canvas.height / 2 - 100 / 2,
-    width: 10,
-    height: 100,
+    width: 5,
+    height: 50,
     color: "red",
     score: 0,
     speedBoostActive: false,
@@ -22,21 +44,36 @@ const user = {
 };
 
 const computer = {
-    x: canvas.width - 10,
+    x: canvas.width - 40,
     y: canvas.height / 2 - 100 / 2,
-    width: 10,
-    height: 100,
+    width: 5,
+    height: 60,
     color: "black",
     score: 0,
     speedBoostActive: false,
-    lastSpeedBoostTime: 0
+    lastSpeedBoostTime: 0,
+    widenBoostActive: false,
+    lastWidenBoostTime: 0
 };
 
-const initialBallSpeed = 3;
+const secondComputer = {
+    x: canvas.width - 40,
+    y: canvas.height / 2 - 100 / 2,
+    width: 5,
+    height: 50,
+    color: "blue",
+    score: 0,
+    speedBoostActive: false,
+    lastSpeedBoostTime: 0,
+    widenBoostActive: false,
+    lastWidenBoostTime: 0
+};
+
+const initialBallSpeed = 6;
 const ball = {
     x: canvas.width / 2,
     y: canvas.height / 2,
-    radius: 10,
+    radius: 5,
     speed: initialBallSpeed,
     velocityX: initialBallSpeed,
     velocityY: initialBallSpeed,
@@ -63,6 +100,25 @@ function drawRectangle(x, y, w, h, color) {
     context.fillRect(x, y, w, h);
 }
 
+function drawBallWithTrail(ball) {
+    
+    context.globalAlpha = 0.7;
+
+    
+    drawCircle(
+        ball.x - ball.velocityX * 2,
+        ball.y - ball.velocityY * 2,
+        ball.radius,
+        'rgba(255, 78, 34, 0.5)'
+    );
+
+    
+    context.globalAlpha = 1; 
+
+    
+    drawCircle(ball.x, ball.y, ball.radius, ball.color);
+}
+
 function drawCircle(x, y, r, color) {
     context.fillStyle = color;
     context.beginPath();
@@ -83,79 +139,163 @@ function drawNet() {
     }
 }
 
-// Variables pour le suivi des erreurs
+// l'ia apprend de ces erreur en lui faisant connaitre l'echec(failedAttempts) et augmentant son agressivité (adaptatif en fonction du niveau du joueur)
 let failedAttempts = 0;
-let aiAggressiveness = 0.8; // Paramètre ajustable : probabilité d'utilisation des pouvoirs après une défaite
+let aiAggressiveness = 0.6; 
 
-function aiUsePowers() {
+function aiUsePowers(player, ia) {
     const currentTime = Date.now();
+    const isLosing = ia.score < player.score;
+    const hasScored = ia.score > player.score;
 
-    // Vérifier si l'IA est en retard pour augmenter l'agressivité
-    const isLosing = computer.score < user.score;
+    // Updating AI parameters display
+    document.getElementById("ai-parameters").innerText = `\nScore: IA - ${ia.score}, joueur - ${player.score}, \n échous: ${failedAttempts}, \nAgressivité: ${aiAggressiveness.toFixed(2)}`;
+    
+    // Decision logic
+    let decision = '';
+    if (Math.abs(ball.x - ia.x) < 150 || (isLosing && Math.random() < aiAggressiveness)) {
+        decision = 'Activate Speed Boost';
+    } else if (ball.velocityX > 3 || Math.abs(ball.y - (ia.y + ia.height / 2)) > 50) {
+        decision = 'Activate Widen Boost';
+    } else {
+        decision = 'No Action';
+    }
+    document.getElementById("ai-decision").innerText = `Decision: ${decision}`;
 
-    // Augmentation de l'agressivité en cas de plusieurs échecs consécutifs
-    if (failedAttempts > 3) {
-        aiAggressiveness = Math.min(1, aiAggressiveness + 0.1); // Augmente progressivement l'agressivité
-        failedAttempts = 0; // Réinitialise après ajustement
+    if (ball.x <= 0 || ball.x >= canvas.width) {
+        ia.speedBoostActive = false;
     }
 
-    // Utiliser l'accélération si la balle est proche et que l'IA a besoin de réagir rapidement
-    if (!computer.speedBoostActive && currentTime - computer.lastSpeedBoostTime > speedBoostCooldown) {
-        if (Math.abs(ball.x - computer.x) < 150 || (isLosing && Math.random() < aiAggressiveness)) {
-            computer.speedBoostActive = true;
-            computer.lastSpeedBoostTime = currentTime;
+    // Incrémenter l'agressivité si l'IA a échoué
+    if (failedAttempts > 3) {
+        aiAggressiveness = Math.min(1, aiAggressiveness + 0.3); 
+        failedAttempts = 0; 
+    }
+
+    // Décrémenter l'agressivité si l'IA gagne un point
+    if (hasScored) {
+        aiAggressiveness = Math.max(0.1, aiAggressiveness - 0.1);
+    }
+
+    if (!computer.speedBoostActive && currentTime - ia.lastSpeedBoostTime > speedBoostCooldown) {
+        if (Math.abs(ball.x - ia.x) < 150 || (isLosing && Math.random() < aiAggressiveness)) {
+            ia.speedBoostActive = true;
+            ia.lastSpeedBoostTime = currentTime;
             setTimeout(() => {
-                computer.speedBoostActive = false;
+                ia.speedBoostActive = false;
             }, speedBoostDuration);
         }
     }
 
-    // Utiliser l'élargissement si la balle est rapide, difficile à atteindre ou si l'IA est en retard
-    if (!computer.widenBoostActive && currentTime - computer.lastWidenBoostTime > widenBoostCooldown) {
+    if (!ia.widenBoostActive && currentTime - ia.lastWidenBoostTime > widenBoostCooldown) {
         if (
             ball.velocityX > 3 ||
-            Math.abs(ball.y - (computer.y + computer.height / 2)) > 50 ||
+            Math.abs(ball.y - (ia.y + ia.height / 2)) > 50 ||
             (isLosing && Math.random() < aiAggressiveness)
         ) {
-            computer.widenBoostActive = true;
-            computer.lastWidenBoostTime = currentTime;
-            computer.height = 150; // Élargissement temporaire
+            ia.widenBoostActive = true;
+            ia.lastWidenBoostTime = currentTime;
+            ia.height = 100; 
+            ia.width = 20; 
             setTimeout(() => {
-                computer.widenBoostActive = false;
-                computer.height = 100; // Retour à la taille normale
+                ia.widenBoostActive = false;
+                ia.height = 70;
+                ia.width = 5;
             }, widenBoostDuration);
         }
     }
 }
 
-// Fonction appelée après chaque point marqué par l'utilisateur
+
+// mauvaise recompence de l'ia pour ses echecs ----
 function onPointLost() {
     failedAttempts++;
     console.log("L'IA a perdu un point. Nombre d'échecs consécutifs :", failedAttempts);
 }
 
 
+let errorActive = false;
+let errorActivationTime = 0;
+
 function moveComputer() {
     const computerCenter = computer.y + computer.height / 2;
-    if (computerCenter < ball.y) {
-        computer.y += 4;
-    } else {
-        computer.y -= 4;
+    const predictedBallY = ball.y + ball.velocityY; 
+    const distanceToBall = Math.abs(computerCenter - predictedBallY);
+
+    let speed = 4;
+    if (distanceToBall < 100) {
+        speed = 6;
     }
-    aiUsePowers();
+
+    const intelligenceRatio = 0.8;
+    let direction = 0;
+
+    // Logique d'attaque et de défense
+    if (Math.random() < intelligenceRatio) {
+        if (computerCenter < predictedBallY) {
+            direction = speed; // Se déplacer vers le bas
+        } else {
+            direction = -speed; // Se déplacer vers le haut
+        }
+    } else {
+        // Mouvement aléatoire
+        direction = (Math.random() < 0.5 ? 1 : -1) * speed;
+    }
+
+    // Limiter le mouvement de l'IA à l'intérieur du canevas
+    computer.y += direction;
+    computer.y = Math.max(0, Math.min(canvas.height - computer.height, computer.y));
+
+    // Appel de la fonction pour gérer les pouvoirs de l'IA
+    aiUsePowers(user, computer);
+
+}
+
+function moveSecondComputer() {
+    const computerCenter = user.y + user.height / 2;
+    const predictedBallY = ball.y + ball.velocityY; 
+    const distanceToBall = Math.abs(computerCenter - predictedBallY);
+
+    let speed = 4;
+    if (distanceToBall < 100) {
+        speed = 6;
+    }
+
+    const intelligenceRatio = 0.8;
+    let direction = 0;
+
+    // Logique d'attaque et de défense
+    if (Math.random() < intelligenceRatio) {
+        if (computerCenter < predictedBallY) {
+            direction = speed; // Se déplacer vers le bas
+        } else {
+            direction = -speed; // Se déplacer vers le haut
+        }
+    } else {
+        // Mouvement aléatoire
+        direction = (Math.random() < 0.5 ? 1 : -1) * speed;
+    }
+
+    // Limiter le mouvement de l'IA à l'intérieur du canevas
+    user.y += direction;
+    user.y = Math.max(0, Math.min(canvas.height - user.height, user.y));
+
+    // Appel de la fonction pour gérer les pouvoirs de l'IA
+    aiUsePowers(computer, user);
+
 }
 
 function moveBall() {
     let speedMultiplier = 1;
     if (user.speedBoostActive) {
-        speedMultiplier *= 4;
+        speedMultiplier *= 8;
         if (Date.now() - user.lastSpeedBoostTime >= speedBoostDuration) {
             user.speedBoostActive = false;
         }
     }
 
     if (computer.speedBoostActive) {
-        speedMultiplier *= 2;
+        speedMultiplier *= 4;
         if (Date.now() - computer.lastSpeedBoostTime >= speedBoostDuration) {
             computer.speedBoostActive = false;
         }
@@ -185,12 +325,41 @@ function moveBall() {
     moveComputer();
 }
 
-function collision(b, p) {
-    return b.x - b.radius < p.x + p.width &&
-           b.x + b.radius > p.x &&
-           b.y - b.radius < p.y + p.height &&
-           b.y + b.radius > p.y;
+// effet visuel des particules ----
+
+function createParticles(x, y, color, count = 10) {
+    for (let i = 0; i < count; i++) {
+        particles.push(new Particle(x, y, color));
+    }
 }
+
+function updateParticles() {
+    particles = particles.filter(particle => particle.lifetime > 0);
+    particles.forEach(particle => particle.draw(context));
+}
+
+// logique collision entre la balle et la raquette -------
+function collision(b, p) {
+    const isCollision = b.x - b.radius < p.x + p.width &&
+                        b.x + b.radius > p.x &&
+                        b.y - b.radius < p.y + p.height &&
+                        b.y + b.radius > p.y;
+
+    if (isCollision) {
+        if (ball.velocityX < 0 && ball.x - ball.radius <= user.x + user.width && ball.y >= user.y && ball.y <= user.y + user.height) {
+            createParticles(ball.x, ball.y, "red"); // Collision avec la raquette de l'utilisateur
+            // Logique d'attaque : si la balle a été déviée, on peut lui donner une vitesse supplémentaire
+            ball.velocityX *= 1.1; // Accélérer la balle
+        } else if (ball.velocityX > 0 && ball.x + ball.radius >= computer.x && ball.y >= computer.y && ball.y <= computer.y + computer.height) {
+            createParticles(ball.x, ball.y, "black"); // Collision avec la raquette de l'IA
+            // Logique défensive : ralentir la balle après la collision
+            ball.velocityX *= 0.9; // Ralentir la balle
+        }
+    }
+
+    return isCollision;
+}
+
 
 function resetBall() {
     alert('continuer la partie?');
@@ -199,6 +368,9 @@ function resetBall() {
     ball.speed = initialBallSpeed; 
     ball.velocityX = initialBallSpeed * (Math.random() > 0.5 ? 1 : -1);
     ball.velocityY = initialBallSpeed * (Math.random() > 0.5 ? 1 : -1);
+
+    computer.speedBoostActive = false;
+    user.speedBoostActive = false;
 }
 
 function render() {
@@ -225,12 +397,19 @@ function render() {
     }
 
     if (user.widenBoostActive) {
-        user.height = 160; // Augmente la taille immédiatement
+        document.getElementById("user-power").innerText = 'User Power: Widen Boost Active';
+        user.height = 100; 
+            user.width = 20;  
         if (Date.now() - user.lastWidenBoostTime >= widenBoostDuration) {
             user.widenBoostActive = false;
-            user.height = 100; // Réinitialise la taille après la durée
+            user.height = 70;
+            user.width = 5;
         }
+    }else if (computer.widenBoostActive) {
+        document.getElementById("computer-power").innerText = 'Computer Power: Widen Boost Active';
     }
+
+    
 
     context.clearRect(0, 0, canvas.width, canvas.height);
     drawNet();
@@ -238,8 +417,32 @@ function render() {
     drawText(computer.score, 3 * canvas.width / 4, canvas.height / 5, "white");
     drawRectangle(user.x, user.y, user.width, user.height, user.color);
     drawRectangle(computer.x, computer.y, computer.width, computer.height, computer.color);
-    drawCircle(ball.x, ball.y, ball.radius, ball.color);
+    drawBallWithTrail(ball);
+
+    updateParticles();
+
+    document.getElementById("user-power").innerText = user.speedBoostActive ? 'User Power: Speed Boost Active' : 'User Power: Off';
+    document.getElementById("computer-power").innerText = computer.speedBoostActive ? 'Computer Power: Speed Boost Active' : 'Computer Power: Off';
 }
+
+// ia versus ia en ping pong ---------
+function startAIvsAI() {
+    function gameLoop() {
+        if (gameRunning) {
+            updateGame(); // Update the game state
+            render(); // Render the game
+            animationId = requestAnimationFrame(gameLoop); // Loop the game
+        }
+    }
+    gameLoop();
+}
+
+function updateGame() {
+    moveBall();
+    moveComputer();
+    moveSecondComputer();
+}
+
 
 function checkWinCondition() {
     if (user.score === 7 || computer.score === 7) {
@@ -250,11 +453,13 @@ function checkWinCondition() {
     }
 }
 
+// score logique ----
 function updateScore(player) {
     player.score++;
     checkWinCondition();
 }
 
+// methode de lancement du jeux -------
 function game() {
     if (gameRunning) {
         moveBall();
@@ -274,6 +479,7 @@ let countdownTime = 15;
 let countdownTime2 = 10;
 let countdownInterval;
 
+// temps d'attente pour l'utilisation des pouvoires de rapidité ---
 function startCountdown() {
     countdownTime = 15;
     const countdownDisplay = document.querySelector("#countdown");
@@ -290,6 +496,7 @@ function startCountdown() {
     }, 1000);
 }
 
+// temps d'attente pour l'utilisation des pouvoires de d'extension de la raquette ---
 function startCountdown2() {
     countdownTime2 = 10;
     const countdownDisplay = document.querySelector("#countdown2");
@@ -306,6 +513,7 @@ function startCountdown2() {
     }, 1000);
 }
 
+// evenement clic des bouttons ---------
 pauseBtn.addEventListener("click", () => {
     gameRunning = false;
     cancelAnimationFrame(animationId);
@@ -322,27 +530,38 @@ canvas.addEventListener("mousemove", (event) => {
 document.addEventListener("keydown", (event) => {
     const currentTime = Date.now();
 
-    // Activation du pouvoir de vitesse
     if (event.key === "a" && !user.speedBoostActive && (currentTime - user.lastSpeedBoostTime > speedBoostCooldown)) {
         user.speedBoostActive = true;
         user.lastSpeedBoostTime = currentTime; 
         startCountdown();
     }
 
-    // Activation du pouvoir d'élargissement
     if (event.key === "z" && !user.widenBoostActive && (currentTime - user.lastWidenBoostTime > widenBoostCooldown) && (currentTime - startTime > 10000)) {
         user.widenBoostActive = true;
         user.lastWidenBoostTime = currentTime;
-        user.height = 160;
-        user.width = 30; // Élargit la raquette immédiatement
+        user.height = 100; 
+            user.width = 20;  
         startCountdown2();
         setTimeout(() => {
             user.widenBoostActive = false;
-            user.height = 100;
-            user.width = 10; // Réinitialise la taille après la durée
+            user.height = 70;
+            user.width = 5; 
         }, widenBoostDuration);
     }
 });
+
+
+startiavsia.addEventListener("click", () => {
+    alert('boutton appuier');
+    gameRunning = true;
+    resetScores(); 
+    startAIvsAI(); 
+});
+
+function resetScores() {
+    user.score = 0;
+    computer.score = 0;
+}
 
 let startTime = Date.now();
 
