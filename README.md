@@ -1,4 +1,5 @@
 # ping-pong-ia
+<<<<<<< HEAD
 jeux de ping pong avec des IA, fait avec html, css et javascript
 
 - chaque joueur a en disposition une raquette et deux atouts (rapidité de frappe --touche A---, agrandissement de la raquette --touche Z---)
@@ -26,3 +27,8 @@ jeux de ping pong avec des IA, fait avec html, css et javascript
 - Utilisateur versus IA
 
 
+=======
+jeux de ping pong avec une IA, fait avec html, css js(programme educative)
+
+telecharger le fichier zip, puis lancer le index.html dans le view
+>>>>>>> 1965ccc5fddce65d028ecc7cc7a9b13446761e1a
