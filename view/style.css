@@ -5,31 +5,31 @@
 }
 
 body {
-    background-color: #2b2b2b; /* Couleur de fond sombre */
-    font-family: 'Arial', sans-serif; /* Police moderne */
+    background-color: #2b2b2b; 
+    font-family: 'Arial', sans-serif; 
 }
 
 .header {
     display: flex;
     align-items: center;
-    justify-content: center; /* Centrer le contenu dans l'en-tête */
+    justify-content: center; 
     padding: 1em;
-    background-color: #4CAF50; /* Vert vif */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Ombre pour la profondeur */
+    background-color: #4CAF50; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); 
 }
 
 .header h1 {
-    color: white; /* Couleur du titre */
-    margin-right: 20px; /* Espace entre le titre et l'image */
+    color: white;
+    margin-right: 20px; 
 }
 
 .header img {
     width: 60px;
-    transition: transform 0.3s; /* Effet de transition sur l'image */
+    transition: transform 0.3s; 
 }
 
 .header img:hover {
-    transform: scale(1.1); /* Agrandir l'image au survol */
+    transform: scale(1.1); 
 }
 
 .pong-wrapper {
@@ -37,24 +37,24 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 2em; /* Espace au-dessus du canvas */
+    margin-top: 2em; 
 }
 
 #ping-pong {
     width: 80%;
     max-width: 680px;
     border: 12px solid #fff; 
-    border-radius: 10px; /* Coins arrondis */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Ombre pour le terrain */
+    border-radius: 10px; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); 
 }
 
 .floating-buttons {
-    position: absolute; /* Position flottante */
-    bottom: 20px; /* Espace en bas */
-    left: 50%; /* Centrer horizontalement */
-    transform: translateX(-50%); /* Ajuster pour centrer */
+    position: absolute;
+    bottom: 20px; 
+    left: 50%; 
+    transform: translateX(-50%);
     display: flex; 
-    gap: 10px; /* Espace entre les boutons */
+    gap: 10px;
 }
 
 .floating-buttons button {
@@ -62,18 +62,18 @@ body {
     text-transform: uppercase; 
     border: none; 
     color: white; 
-    background-color: #007BFF; /* Bleu vibrant */
+    background-color: #007BFF; 
     padding: 15px 20px; 
     font-size: 1em; 
     font-weight: bold; 
-    border-radius: 5px; /* Coins arrondis */
-    cursor: pointer; /* Curseur pointer */
-    transition: background-color 0.3s, transform 0.3s; /* Transition douce */
+    border-radius: 5px;
+    cursor: pointer; 
+    transition: background-color 0.3s, transform 0.3s; 
 }
 
 .floating-buttons button:hover {
-    background-color: #0056b3; /* Couleur de fond au survol */
-    transform: scale(1.05); /* Agrandir le bouton au survol */
+    background-color: #0056b3; 
+    transform: scale(1.05); 
 }
 
 @media screen and (max-width: 480px) {
@@ -83,8 +83,8 @@ body {
 
     .floating-buttons button {
         letter-spacing: 1px; 
-        padding: 8px 10px; /* Ajustement du remplissage */
-        font-size: 0.9em; /* Taille de police légèrement augmentée */
+        padding: 8px 10px; 
+        font-size: 0.9em; 
     }
 }
 

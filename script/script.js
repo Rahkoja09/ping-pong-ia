@@ -148,10 +148,10 @@ function aiUsePowers(player, ia) {
     const isLosing = ia.score < player.score;
     const hasScored = ia.score > player.score;
 
-    // Updating AI parameters display
+    
     document.getElementById("ai-parameters").innerText = `\nScore: IA - ${ia.score}, joueur - ${player.score}, \n échous: ${failedAttempts}, \nAgressivité: ${aiAggressiveness.toFixed(2)}`;
     
-    // Decision logic
+    
     let decision = '';
     if (Math.abs(ball.x - ia.x) < 150 || (isLosing && Math.random() < aiAggressiveness)) {
         decision = 'Activate Speed Boost';
@@ -233,20 +233,20 @@ function moveComputer() {
     // Logique d'attaque et de défense
     if (Math.random() < intelligenceRatio) {
         if (computerCenter < predictedBallY) {
-            direction = speed; // Se déplacer vers le bas
+            direction = speed;
         } else {
-            direction = -speed; // Se déplacer vers le haut
+            direction = -speed;
         }
     } else {
-        // Mouvement aléatoire
+        
         direction = (Math.random() < 0.5 ? 1 : -1) * speed;
     }
 
-    // Limiter le mouvement de l'IA à l'intérieur du canevas
+    
     computer.y += direction;
     computer.y = Math.max(0, Math.min(canvas.height - computer.height, computer.y));
 
-    // Appel de la fonction pour gérer les pouvoirs de l'IA
+    
     aiUsePowers(user, computer);
 
 }
@@ -264,15 +264,15 @@ function moveSecondComputer() {
     const intelligenceRatio = 0.8;
     let direction = 0;
 
-    // Logique d'attaque et de défense
+    
     if (Math.random() < intelligenceRatio) {
         if (computerCenter < predictedBallY) {
-            direction = speed; // Se déplacer vers le bas
+            direction = speed;
         } else {
-            direction = -speed; // Se déplacer vers le haut
+            direction = -speed; 
         }
     } else {
-        // Mouvement aléatoire
+        
         direction = (Math.random() < 0.5 ? 1 : -1) * speed;
     }
 
@@ -280,7 +280,6 @@ function moveSecondComputer() {
     user.y += direction;
     user.y = Math.max(0, Math.min(canvas.height - user.height, user.y));
 
-    // Appel de la fonction pour gérer les pouvoirs de l'IA
     aiUsePowers(computer, user);
 
 }
@@ -347,13 +346,11 @@ function collision(b, p) {
 
     if (isCollision) {
         if (ball.velocityX < 0 && ball.x - ball.radius <= user.x + user.width && ball.y >= user.y && ball.y <= user.y + user.height) {
-            createParticles(ball.x, ball.y, "red"); // Collision avec la raquette de l'utilisateur
-            // Logique d'attaque : si la balle a été déviée, on peut lui donner une vitesse supplémentaire
+            createParticles(ball.x, ball.y, "red"); 
             ball.velocityX *= 1.1; // Accélérer la balle
         } else if (ball.velocityX > 0 && ball.x + ball.radius >= computer.x && ball.y >= computer.y && ball.y <= computer.y + computer.height) {
             createParticles(ball.x, ball.y, "black"); // Collision avec la raquette de l'IA
-            // Logique défensive : ralentir la balle après la collision
-            ball.velocityX *= 0.9; // Ralentir la balle
+            ball.velocityX *= 0.9;
         }
     }
 
@@ -429,9 +426,9 @@ function render() {
 function startAIvsAI() {
     function gameLoop() {
         if (gameRunning) {
-            updateGame(); // Update the game state
-            render(); // Render the game
-            animationId = requestAnimationFrame(gameLoop); // Loop the game
+            updateGame(); 
+            render();
+            animationId = requestAnimationFrame(gameLoop); 
         }
     }
     gameLoop();
